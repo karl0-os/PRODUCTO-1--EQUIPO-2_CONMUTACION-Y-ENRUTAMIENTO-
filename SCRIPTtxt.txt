@@ -1,16 +1,21 @@
 ----------------------SCRIPT PRODUCTO 1-----------------
+----------SWM1---------------
 
-
-------------------SWM1----------------------------
-
+enable
 conf t
 
 hostname SWM1
 
-ip routing
-
 vtp domain EMPRESA-EQ2
 vtp mode server
+vtp version 2
+
+end
+wr
+
+exit
+
+conf t
 
 vlan 10
  name ESTUDIANTES
@@ -27,264 +32,305 @@ vlan 40
 vlan 50
  name BLACKHULL
 
-spanning-tree mode rapid-pvst
+vlan 60
+ name FINANZAS
 
-spanning-tree vlan 10,20,30,40,50 root primary
+vlan 70
+ name ACADEMICOS
 
-!
-! Etherchannel
-!
+vlan 80
+ name DATACENTER
 
-interface range e0/1-3
+vlan 90
+ name BLACKHULL_R2
 
+vlan 100
+ name P2P
+
+end
+wr
+
+interface e0/0
  switchport trunk encapsulation dot1q
  switchport mode trunk
 
- channel-group 1 mode active
+
+interface range e0/1 - 3
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+
+
+
+*******ETHERCHANNEL***************
+
+conf t
+
+interface range e0/1 - 3
+
+channel-group 1 mode active
 
 exit
 
 interface port-channel1
 
+switchport mode trunk
+
+end
+wr
+
+conf t
+
+spanning-tree mode rapid-pvst
+
+spanning-tree vlan 10 root primary
+spanning-tree vlan 20 root primary
+spanning-tree vlan 30 root primary
+spanning-tree vlan 40 root primary
+spanning-tree vlan 50 root primary
+
+end
+wr
+
+
+----------SWM2--------------------
+conf t
+
+hostname SWM2
+
+vtp domain EMPRESA-EQ2
+vtp mode client
+vtp version 2
+
+end
+wr
+
+interface e0/0
+ switchport trunk encapsulation dot1q
  switchport mode trunk
 
-!
-! Troncales hacia acceso
-!
+interface range e0/1 - 3
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+
+
+conf t
+
+interface range e0/1 - 3
+
+channel-group 1 mode active
+
+exit
+
+interface port-channel1
+
+switchport mode trunk
+
+end
+wr
+
+conf t
+
+spanning-tree mode rapid-pvst
+
+spanning-tree vlan 10 root secondary
+spanning-tree vlan 20 root secondary
+spanning-tree vlan 30 root secondary
+spanning-tree vlan 40 root secondary
+spanning-tree vlan 50 root secondary
+
+end
+wr
+---------------------SWAC1-----------------
+enable
+conf t
+
+hostname SWAC1
+
+vtp domain EMPRESA-EQ2
+vtp mode client
+
+end
+wr
+interface e1/0
+
+switchport mode access
+switchport access vlan 20
+
+spanning-tree portfast
+
+--------------------SWAC2-------------------
+
+
+enable 
+
+conf t
+
+hostname SWAC2
+
+vtp domain EMPRESA-EQ2
+vtp mode client
+
+end
+wr
+interface e2/0
+
+switchport mode access
+switchport access vlan 10
+
+spanning-tree portfast
+---------------------------SWAC3---------------------
+conf t
+
+hostname SWAC3
+
+vtp domain EMPRESA-EQ2
+vtp mode client
+
+end
+wr
+
+interface e3/0
+
+switchport mode access
+switchport access vlan 30
+
+spanning-tree portfast
+
+
+------------R1 CORE--------------------
+
+conf t
+
+interface e0/0
+ no shutdown
+
+interface e0/0.10
+ encapsulation dot1Q 10
+ ip address 172.18.0.1 255.255.248.0
+
+interface e0/0.20
+ encapsulation dot1Q 20
+ ip address 172.18.8.1 255.255.255.0
+
+interface e0/0.30
+ encapsulation dot1Q 30
+ ip address 172.18.9.1 255.255.255.224
+
+interface e0/0.40
+ encapsulation dot1Q 40
+ ip address 172.18.9.33 255.255.255.224
+
+interface e0/0.50
+ encapsulation dot1Q 50
+ ip address 172.18.9.65 255.255.255.240
+
+end
+wr
+conf t
+
+interface e0/0
+ no shutdown
+
+interface e0/0.10
+ encapsulation dot1Q 10
+ ip address 172.18.0.1 255.255.248.0
+
+interface e0/0.20
+ encapsulation dot1Q 20
+ ip address 172.18.8.1 255.255.255.0
+
+interface e0/0.30
+ encapsulation dot1Q 30
+ ip address 172.18.9.1 255.255.255.224
+
+interface e0/0.40
+ encapsulation dot1Q 40
+ ip address 172.18.9.33 255.255.255.224
+
+interface e0/0.50
+ encapsulation dot1Q 50
+ ip address 172.18.9.65 255.255.255.240
+
+end
+wr
+interface s1/0
+
+ip address 172.18.11.81 255.255.255.252
+
+no shutdown
+
+conf t
+
+router ospf 1
+
+router-id 1.1.1.1
+
+network 172.18.0.0 0.0.7.255 area 0
+network 172.18.8.0 0.0.0.255 area 0
+network 172.18.9.0 0.0.0.31 area 0
+network 172.18.9.32 0.0.0.31 area 0
+network 172.18.9.64 0.0.0.15 area 0
+network 172.18.11.80 0.0.0.3 area 0
+
+end
+wr
+
+---------------------SWA13--------------------
 
 interface e1/0
- switchport mode trunk
 
-interface e1/1
- switchport mode trunk
+switchport mode access
+switchport access vlan 70
 
-interface e1/2
- switchport mode trunk
+FIN1
 
-!
-! Enlace a R1
-!
+interface e2/0
 
-interface e0/0
+switchport mode access
+switchport access vlan 60
 
- no switchport
-
- ip address 172.18.20.2 255.255.255.252
-
-!
-! SVI
-!
-
-interface vlan 10
-
- ip address 172.18.0.2 255.255.248.0
-
- standby 10 ip 172.18.0.1
- standby 10 priority 110
- standby 10 preempt
-
-interface vlan 20
-
- ip address 172.18.8.2 255.255.255.0
-
- standby 20 ip 172.18.8.1
- standby 20 priority 110
- standby 20 preempt
-
-interface vlan 30
-
- ip address 172.18.9.2 255.255.255.224
-
- standby 30 ip 172.18.9.1
- standby 30 priority 110
- standby 30 preempt
-
-interface vlan 40
-
- ip address 172.18.9.34 255.255.255.224
-
- standby 40 ip 172.18.9.33
- standby 40 priority 110
- standby 40 preempt
-
-interface vlan 50
-
- ip address 172.18.9.66 255.255.255.240
-
- standby 50 ip 172.18.9.65
- standby 50 priority 110
- standby 50 preempt
-
-router ospf 1
-
- router-id 11.11.11.11
-
- network 172.18.20.0 0.0.0.3 area 0
-
- network 172.18.0.0 0.0.7.255 area 0
- network 172.18.8.0 0.0.0.255 area 0
- network 172.18.9.0 0.0.0.31 area 0
- network 172.18.9.32 0.0.0.31 area 0
- network 172.18.9.64 0.0.0.15 area 0
-
-end
-wr
-
-
------------------------------SWM2-------------------------------------
-
-Secundario HSRP
-
-Todo igual excepto lo siguiente: 
-
-ip routing
-
-interface e0/0
-
- no switchport
-
- ip address 172.18.20.6 255.255.255.252
-
-interface vlan 10
-
- ip address 172.18.0.3 255.255.248.0
-
- standby 10 ip 172.18.0.1
- standby 10 priority 100
- standby 10 preempt
-
-interface vlan 20
-
- ip address 172.18.8.3 255.255.255.0
-
- standby 20 ip 172.18.8.1
-
-interface vlan 30
-
- ip address 172.18.9.3 255.255.255.224
-
- standby 30 ip 172.18.9.1
-
-interface vlan 40
-
- ip address 172.18.9.35 255.255.255.224
-
- standby 40 ip 172.18.9.33
-
-interface vlan 50
-
- ip address 172.18.9.67 255.255.255.240
-
- standby 50 ip 172.18.9.65
-spanning-tree vlan 10,20,30,40,50 root secondary
-
-
-----------------------------R1-CORE------------------------------
+-----------------R2-------------------------
 
 conf t
 
-hostname R1-CORE
-
-interface gi0/0
-
- ip address 172.18.11.81 255.255.255.252
-
+interface e0/0
  no shutdown
 
-interface gi0/2
+interface e0/0.60
+ encapsulation dot1Q 60
+ ip address 172.18.10.129 255.255.255.128
 
- ip address 172.18.20.1 255.255.255.252
+interface e0/0.70
+ encapsulation dot1Q 70
+ ip address 172.18.10.1 255.255.255.128
 
- no shutdown
+interface e0/0.80
+ encapsulation dot1Q 80
+ ip address 172.18.11.1 255.255.255.192
 
-interface gi0/3
-
- ip address 172.18.20.5 255.255.255.252
-
- no shutdown
-
-router ospf 1
-
- router-id 1.1.1.1
-
- network 172.18.11.80 0.0.0.3 area 0
-
- network 172.18.20.0 0.0.0.3 area 0
-
- network 172.18.20.4 0.0.0.3 area 0
+interface e0/0.90
+ encapsulation dot1Q 90
+ ip address 172.18.11.65 255.255.255.240
 
 end
 wr
-```
+interface s1/0
 
----
+ip address 172.18.11.82 255.255.255.252
 
-----------------------------------------R2---------------------------------
+no shutdown
 
 conf t
 
-hostname R2
-
-interface gi0/1
-
- ip address 172.18.11.82 255.255.255.252
-
- no shutdown
-
 router ospf 1
 
- router-id 2.2.2.2
+router-id 2.2.2.2
 
- network 172.18.11.80 0.0.0.3 area 0
+network 172.18.10.0 0.0.0.127 area 0
+network 172.18.10.128 0.0.0.127 area 0
+network 172.18.11.0 0.0.0.63 area 0
+network 172.18.11.64 0.0.0.15 area 0
+network 172.18.11.80 0.0.0.3 area 0
 
 end
 wr
---------------------------------# SW4-------------------------------------
-
-vlan 20
-
-interface e0/2
-
- switchport mode access
-
- switchport access vlan 20
-
- spanning-tree portfast
-```
-
----
-
-# SW5
-
-Estudiantes
-
-```cisco
-vlan 10
-
-interface e0/2
-
- switchport mode access
-
- switchport access vlan 10
-
- spanning-tree portfast
-```
-
----------------------------------------------
-
-# SW6
-
-Gestión
-
-```cisco
-vlan 30
-
-interface e0/2
-
- switchport mode access
-
- switchport access vlan 30
-
- spanning-tree portfast
-```
-
